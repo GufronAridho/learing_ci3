@@ -63,6 +63,8 @@
         integrity="sha256-+uGLJmmTKOqBr+2E6KDYs/NRsHxSkONXFHUL0fy2O/4="
         crossorigin="anonymous" />
 
+    <link rel="stylesheet" href="<?php echo base_url('assets/plugins/datatable/datatables.css'); ?>">
+
 </head>
 <!--end::Head-->
 <!--begin::Body-->
@@ -233,9 +235,15 @@
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.min.js"
         crossorigin="anonymous"></script>
     <!--end::Required Plugin(Bootstrap 5)--><!--begin::Required Plugin(AdminLTE)-->
+
     <script src="<?php echo base_url('assets/js/adminlte.js'); ?>"></script>
 
     <!--end::Required Plugin(AdminLTE)--><!--begin::OverlayScrollbars Configure-->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script src="<?php echo base_url('assets/plugins/datatable/datatables.js'); ?>"></script>
+
+
     <script>
         const SELECTOR_SIDEBAR_WRAPPER = '.sidebar-wrapper';
         const Default = {
