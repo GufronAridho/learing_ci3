@@ -35,4 +35,9 @@ class Categories_model extends CI_Model
     {
         return $this->db->where('id', $id)->delete($this->table);
     }
+
+    public function insert_batch($data)
+    {
+        $this->db->insert_batch($this->table, $data);
+    }
 }

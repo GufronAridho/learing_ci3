@@ -32,10 +32,10 @@
                                 <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#add_modal">
                                     <i class="bi bi-plus-circle"></i> Add Category
                                 </button>
-                                <button class="btn btn-info btn-sm text-white" data-bs-toggle="modal" data-bs-target="#import_modal">
-                                    <i class="bi bi-file-earmark-arrow-up"></i> Import Excel
+                                <button class="btn btn-info btn-sm text-white" data-bs-toggle="modal" data-bs-target="#upload_modal">
+                                    <i class="bi bi-file-earmark-arrow-up"></i> Upload Excel
                                 </button>
-                                <button class="btn btn-secondary btn-sm">
+                                <button class="btn btn-secondary btn-sm" id="download_excel">
                                     <i class="bi bi-file-earmark-arrow-down"></i> Download Excel
                                 </button>
                                 <button class="btn btn-danger btn-sm">
@@ -53,9 +53,9 @@
                             <option value="user">User</option>
                         </select>
                     </div>
-                    <!-- Contoh responsive table -->
+
                     <div class="table-responsive">
-                        <table class="table table-striped table-bordered    " id="table_details">
+                        <table class="table table-striped table-bordered" id="table_details">
                             <thead class="text-center">
                                 <tr>
                                     <th>No</th>
@@ -122,7 +122,36 @@
                         <textarea class="form-control" id="edit_description" name="description" rows="3"></textarea>
                     </div>
                 </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
+<div class="modal fade" id="upload_modal" tabindex="-1" aria-labelledby="upload_modalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="upload_modalLabel">Upload Category</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="upload_data_form" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="form-group mb-3">
+                        <a href="<?= base_url('assets/template/categories.xlsx'); ?>" class="btn btn-success" download>
+                            <i class="bi bi-download"></i> Download Template
+                        </a>
+                    </div>
+                    <div class="form-group row">
+                        <label for="upload_file" class="col-sm-3 col-form-label">Upload Excel</label>
+                        <div class="col-sm-9">
+                            <input type="file" class="form-control" id="upload_file" name="upload_file" required accept=".xlsx">
+                        </div>
+                    </div>
+                </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="submit" class="btn btn-primary">Save changes</button>
@@ -160,16 +189,32 @@
                     className: 'text-center',
                     orderable: false
                 }
-            ]
+            ],
+            dom: 'rtip',
+            buttons: [{
+                extend: 'excelHtml5',
+                title: '',
+                // text: '<i class="bi bi-file-earmark-excel"></i> Excel',
+                filename: 'Categories_List_' + new Date().toString(),
+                className: 'd-none',
+                exportOptions: {
+                    columns: [0, 1, 2]
+                }
+            }]
         });
+
+        $('#download_excel').on('click', function() {
+            table.button('.buttons-excel').trigger();
+        })
 
         function get_table() {
             $.ajax({
-                url: "<?= base_url('master_data/get_categories') ?>",
+                url: "<?= base_url('categories/get_categories') ?>",
                 type: "GET",
                 dataType: "json",
                 success: function(res) {
                     if (res.status === 'success') {
+                        console.log(res)
                         table.clear();
                         table.rows.add(res.data);
                         table.draw();
@@ -205,8 +250,9 @@
                 cancelButtonColor: "#d33",
                 confirmButtonText: "Yes, Confirm!"
             }).then((result) => {
+                if (!result.isConfirmed) return;
                 $.ajax({
-                    url: "<?= base_url('master_data/save_categories') ?>",
+                    url: "<?= base_url('categories/save_categories') ?>",
                     type: "POST",
                     data: dataForm,
                     dataType: "json",
@@ -276,8 +322,9 @@
                 cancelButtonColor: "#d33",
                 confirmButtonText: "Yes, Confirm!"
             }).then((result) => {
+                if (!result.isConfirmed) return;
                 $.ajax({
-                    url: "<?= base_url('master_data/update_categories') ?>",
+                    url: "<?= base_url('categories/update_categories') ?>",
                     type: "POST",
                     data: dataForm,
                     dataType: "json",
@@ -318,8 +365,9 @@
                 cancelButtonColor: "#d33",
                 confirmButtonText: "Yes, Confirm!"
             }).then((result) => {
+                if (!result.isConfirmed) return;
                 $.ajax({
-                    url: "<?= base_url('master_data/delete_categories') ?>",
+                    url: "<?= base_url('categories/delete_categories') ?>",
                     type: "POST",
                     data: {
                         id: id
@@ -347,8 +395,53 @@
                     }
                 });
             })
+        });
 
+        $("#upload_data_form").on("submit", function(e) {
+            e.preventDefault();
 
+            let formData = new FormData(this);
+
+            Swal.fire({
+                title: "Are you sure?",
+                text: "Upload this Categories!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, Confirm!"
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+                $.ajax({
+                    url: "<?= base_url('categories/upload_categories') ?>",
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: "json",
+                    success: function(res) {
+                        if (res.status === 'success') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: res.message
+                            }).then(() => {
+                                $('#upload_modal').modal('hide');
+                                get_table();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                html: res.message
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        Swal.fire('Error', 'Something went wrong: ' + error, 'error');
+                    }
+                });
+            })
         });
 
     });
