@@ -35,10 +35,10 @@
                                 <button class="btn btn-info btn-sm text-white" data-bs-toggle="modal" data-bs-target="#upload_modal">
                                     <i class="bi bi-file-earmark-arrow-up"></i> Upload Excel
                                 </button>
-                                <button class="btn btn-secondary btn-sm" id="download_excel">
+                                <!-- <button class="btn btn-secondary btn-sm" id="download_excel">
                                     <i class="bi bi-file-earmark-arrow-down"></i> Download Excel
-                                </button>
-                                <button class="btn btn-danger btn-sm">
+                                </button> -->
+                                <button class="btn btn-danger btn-sm" id="delete_selected">
                                     <i class="bi bi-trash"></i> Delete Selected
                                 </button>
                             </div>
@@ -58,6 +58,7 @@
                         <table class="table table-striped table-bordered" id="table_details">
                             <thead class="text-center">
                                 <tr>
+                                    <th><input type="checkbox" id="select_all"></th>
                                     <th>No</th>
                                     <th>Categories</th>
                                     <th>Description</th>
@@ -83,6 +84,9 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="add_data_form">
+                <!-- <input type="hidden"
+                    name="<?= $this->security->get_csrf_token_name(); ?>"
+                    value="<?= $this->security->get_csrf_hash(); ?>" /> -->
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="category_name" class="form-label">Category Name <span class="text-danger">*</span></label>
@@ -112,6 +116,9 @@
             </div>
             <form id="edit_data_form">
                 <input type="hidden" id="edit_id" name="id" required>
+                <!-- <input type="hidden"
+                    name="<?= $this->security->get_csrf_token_name(); ?>"
+                    value="<?= $this->security->get_csrf_hash(); ?>" /> -->
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="category_name" class="form-label">Category Name <span class="text-danger">*</span></label>
@@ -139,6 +146,9 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="upload_data_form" enctype="multipart/form-data">
+                <!-- <input type="hidden"
+                    name="<?= $this->security->get_csrf_token_name(); ?>"
+                    value="<?= $this->security->get_csrf_hash(); ?>" /> -->
                 <div class="modal-body">
                     <div class="form-group mb-3">
                         <a href="<?= base_url('assets/template/categories.xlsx'); ?>" class="btn btn-success" download>
@@ -174,6 +184,14 @@
             ordering: true,
             responsive: true,
             columns: [{
+                    data: 'checkbox',
+                    orderable: false,
+                    className: 'text-center',
+                    render: function(data, type, row) {
+                        return data;
+                    }
+                },
+                {
                     data: 'no',
                     className: 'text-center'
                 },
@@ -190,22 +208,61 @@
                     orderable: false
                 }
             ],
-            dom: 'rtip',
+            dom: 'Bfrtip',
             buttons: [{
-                extend: 'excelHtml5',
-                title: '',
-                // text: '<i class="bi bi-file-earmark-excel"></i> Excel',
-                filename: 'Categories_List_' + new Date().toString(),
-                className: 'd-none',
-                exportOptions: {
-                    columns: [0, 1, 2]
+                    extend: 'copyHtml5',
+                    text: '<i class="bi bi-clipboard"></i> Copy',
+                    title: 'Copy to clipboard',
+                    exportOptions: {
+                        columns: [0, 1, 2]
+                    }
+                },
+                {
+                    extend: 'excelHtml5',
+                    text: '<i class="bi bi-file-earmark-excel"></i> Excel',
+                    title: 'Export to Excel',
+                    filename: 'Categories_List_' + new Date().toISOString().slice(0, 10),
+                    exportOptions: {
+                        columns: [0, 1, 2]
+                    }
+                },
+                {
+                    extend: 'csvHtml5',
+                    text: '<i class="bi bi-file-earmark-spreadsheet"></i> CSV',
+                    title: 'Export to CSV',
+                    filename: 'Categories_List_' + new Date().toISOString().slice(0, 10),
+                    exportOptions: {
+                        columns: [0, 1, 2]
+                    }
+                },
+                {
+                    extend: 'pdfHtml5',
+                    text: '<i class="bi bi-file-earmark-pdf"></i> PDF',
+                    title: 'Export to PDF',
+                    filename: 'Categories_List_' + new Date().toISOString().slice(0, 10),
+                    exportOptions: {
+                        columns: [0, 1, 2]
+                    },
+                    orientation: 'landscape',
+                    pageSize: 'A4',
+                    customize: function(doc) {
+                        doc.content[1].table.widths = Array(doc.content[1].table.body[0].length + 1).join('*').split('');
+                    }
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="bi bi-printer"></i> Print',
+                    title: 'Print Table',
+                    exportOptions: {
+                        columns: [0, 1, 2]
+                    }
                 }
-            }]
+            ]
         });
 
-        $('#download_excel').on('click', function() {
-            table.button('.buttons-excel').trigger();
-        })
+        // $('#download_excel').on('click', function() {
+        //     table.button('.buttons-excel').trigger();
+        // })
 
         function get_table() {
             $.ajax({
@@ -257,8 +314,9 @@
                     data: dataForm,
                     dataType: "json",
                     success: function(res) {
-                        if (res.status === 'success') {
+                        // $('input[name="' + res.csrf_name + '"]').val(res.csrf_hash);
 
+                        if (res.status === 'success') {
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Success',
@@ -329,6 +387,8 @@
                     data: dataForm,
                     dataType: "json",
                     success: function(res) {
+                        // $('input[name="' + res.csrf_name + '"]').val(res.csrf_hash);
+
                         if (res.status === 'success') {
                             Swal.fire({
                                 icon: 'success',
@@ -371,9 +431,12 @@
                     type: "POST",
                     data: {
                         id: id
+                        // ,"<?= $this->security->get_csrf_token_name(); ?>": "<?= $this->security->get_csrf_hash(); ?>"
                     },
                     dataType: "json",
                     success: function(res) {
+                        // $('input[name="' + res.csrf_name + '"]').val(res.csrf_hash);
+
                         if (res.status === 'success') {
                             Swal.fire({
                                 icon: 'success',
@@ -420,6 +483,8 @@
                     contentType: false,
                     dataType: "json",
                     success: function(res) {
+                        // $('input[name="' + res.csrf_name + '"]').val(res.csrf_hash);
+
                         if (res.status === 'success') {
                             Swal.fire({
                                 icon: 'success',
@@ -427,6 +492,73 @@
                                 text: res.message
                             }).then(() => {
                                 $('#upload_modal').modal('hide');
+                                get_table();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                html: res.message
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        Swal.fire('Error', 'Something went wrong: ' + error, 'error');
+                    }
+                });
+            })
+        });
+
+        $('#select_all').on('click', function() {
+            var checked = this.checked;
+            $('.delete-checkbox').each(function() {
+                this.checked = checked;
+            });
+        });
+
+        $('#table_details tbody').on('change', '.delete-checkbox', function() {
+            if ($('.delete-checkbox:checked').length === $('.delete-checkbox').length) {
+                $('#select_all').prop('checked', true);
+            } else {
+                $('#select_all').prop('checked', false);
+            }
+        });
+
+        $('#delete_selected').on('click', function() {
+            var selected = [];
+            $('.delete-checkbox:checked').each(function() {
+                selected.push($(this).val());
+            });
+
+            if (selected.length === 0) {
+                alert('Please select at least one category to delete.');
+                return;
+            }
+
+            Swal.fire({
+                title: "Are you sure?",
+                text: "Delete this Categories!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, Confirm!"
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+                $.ajax({
+                    url: '<?= base_url("categories/delete_multiple_categories") ?>',
+                    type: 'POST',
+                    data: {
+                        ids: selected
+                    },
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.status === 'success') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: res.message
+                            }).then(() => {
                                 get_table();
                             });
                         } else {

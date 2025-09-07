@@ -172,15 +172,43 @@
                                 <li class="nav-item">
                                     <a href="<?= base_url('master_data/user_management'); ?>"
                                         class="nav-link <?= ($this->uri->segment(2) == 'user_management') ? 'active' : '' ?>">
-                                        <i class="nav-icon bi bi-circle"></i>
-                                        <p>User Managment</p>
+                                        <i class="nav-icon bi bi-people"></i>
+                                        <p>User Management</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="<?= base_url('master_data/categories'); ?>"
+                                        class="nav-link <?= ($this->uri->segment(2) == 'categories') ? 'active' : '' ?>">
+                                        <i class="nav-icon bi bi-tags"></i>
+                                        <p>Categories</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="<?= base_url('master_data/units'); ?>"
+                                        class="nav-link <?= ($this->uri->segment(2) == 'units') ? 'active' : '' ?>">
+                                        <i class="nav-icon bi bi-rulers"></i>
+                                        <p>Units</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a href="<?= base_url('master_data/products'); ?>"
                                         class="nav-link <?= ($this->uri->segment(2) == 'products') ? 'active' : '' ?>">
-                                        <i class="nav-icon bi bi-circle"></i>
-                                        <p>Product</p>
+                                        <i class="nav-icon bi bi-box-seam"></i>
+                                        <p>Products</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="<?= base_url('master_data/suppliers'); ?>"
+                                        class="nav-link <?= ($this->uri->segment(2) == 'suppliers') ? 'active' : '' ?>">
+                                        <i class="nav-icon bi bi-truck"></i>
+                                        <p>Suppliers</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="<?= base_url('master_data/customers'); ?>"
+                                        class="nav-link <?= ($this->uri->segment(2) == 'customers') ? 'active' : '' ?>">
+                                        <i class="nav-icon bi bi-person-badge"></i>
+                                        <p>Customers</p>
                                     </a>
                                 </li>
                             </ul>
