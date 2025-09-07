@@ -10,17 +10,17 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
  * @property CI_Form_validation $form_validation
  * @property CI_Input $input
  * @property CI_DB_query_builder $db
- * @property Categories_model $Categories_model
+ * @property Customers_model $Customers_model
  * @property CI_Security $security
  */
 
-class Categories extends CI_Controller
+class Customers extends CI_Controller
 {
     public function __construct()
     {
         parent::__construct();
         $this->load->library('form_validation');
-        $this->load->model('Categories_model');
+        $this->load->model('Customers_model');
         $this->load->helper('url');
     }
 
@@ -29,35 +29,37 @@ class Categories extends CI_Controller
         echo json_encode([
             'status'    => $status,
             'message'   => $message
-            // ,'csrf_name' => $this->security->get_csrf_token_name(),
-            // 'csrf_hash' => $this->security->get_csrf_hash()
         ]);
         exit;
     }
 
-    public function get_categories()
+    public function get_customers()
     {
         try {
-            $categories = $this->Categories_model->get_all();
+            $table = $this->Customers_model->get_all();
             $data = [];
-            $no = 1;
-            foreach ($categories as $cat) {
+            $row = 1;
+
+            foreach ($table as $td) {
                 $row = [];
-                $row['checkbox'] = '<input type="checkbox" class="delete-checkbox" value="' . $cat->id . '">';
-                $row['no'] = $no++;
-                $row['category_name'] = $cat->category_name;
-                $row['description'] = $cat->description;
+                $row['checklist'] = '<input type="checkbox" class="delete-checkbox" value="' . $td->id . '">';
+                $row['customer_code'] = $td->customer_code;
+                $row['customer_name'] = $td->customer_name;
+                $row['contact_name'] = $td->contact_name;
+                $row['phone'] = $td->phone;
+                $row['email'] = $td->email;
+                $row['address'] = $td->address;
                 $row['action'] = '
-                <button class="btn btn-sm btn-warning edit-btn" data-id="' . $cat->id . '" data-category_name="' . $cat->category_name . '" data-description="' . $cat->description . '">
+                <button class="btn btn-sm btn-warning edit-btn" data-id="' . $td->id . '" data-customer_code="' . $td->customer_code . '" data-customer_name="' . $td->customer_name . '" 
+                data-contact_name="' . $td->contact_name . '" data-phone="' . $td->phone . '" data-email="' . $td->email . '" data-address="' . $td->address . '">
                     <i class="bi bi-pencil-square"></i>
                 </button>
-                <button class="btn btn-sm btn-danger delete-btn" data-id="' . $cat->id . '">
+                <button class="btn btn-sm btn-danger delete-btn" data-id="' . $td->id . '">
                     <i class="bi bi-trash"></i>
                 </button>
                 ';
                 $data[] = $row;
             }
-
             echo json_encode([
                 'status' => 'success',
                 'data'   => $data
@@ -70,15 +72,15 @@ class Categories extends CI_Controller
         }
     }
 
-    public function save_categories()
+    public function save_customers()
     {
         $this->form_validation->set_rules(
-            'category_name',
-            'Category Name',
-            'required|is_unique[categories.category_name]',
+            'customer_code',
+            'Customer Code',
+            'required|is_unique[customers.customer_code]',
             [
-                'required'  => 'Category name is required',
-                'is_unique' => 'This category already exists'
+                'required'  => 'Customer code is required',
+                'is_unique' => 'This Customer code already exists'
             ]
         );
 
@@ -88,50 +90,54 @@ class Categories extends CI_Controller
         }
 
         $data = [
-            'category_name' => $this->input->post('category_name', TRUE),
-            'description' => $this->input->post('description', TRUE),
+            'customer_code' => $this->input->post('customer_code', TRUE),
+            'customer_name' => $this->input->post('customer_name', TRUE),
+            'contact_name' => $this->input->post('contact_name', TRUE),
+            'phone' => $this->input->post('phone', TRUE),
+            'email' => $this->input->post('email', TRUE),
+            'address' => $this->input->post('address', TRUE),
             'created_at' => date('Y-m-d H:i:s')
         ];
 
         try {
-            $operation = $this->Categories_model->insert($data);
-            $msg = $operation ? 'Category saved successfully!' : 'Failed to save category.';
+            $operation = $this->Customers_model->insert($data);
+            $msg = $operation ? 'Customer saved successfully!' : 'Failed to save Customer.';
             $this->_json_response($operation ? 'success' : 'error', $msg);
         } catch (Exception $e) {
-            log_message('error', 'Save Categories Error: ' . $e->getMessage());
+            log_message('error', 'Save Customer Error: ' . $e->getMessage());
             $this->_json_response('error', 'Unexpected error: ' . $e->getMessage());
         }
     }
 
-    public function _unique_category_name($name, $id)
+    public function _unique_customers_code($name, $id)
     {
-        $exists = $this->db->where('category_name', $name)
+        $exists = $this->db->where('customer_code', $name)
             ->where('id !=', $id)
-            ->get('categories')
+            ->get('customers')
             ->row();
 
         return $exists ? FALSE : TRUE;
     }
 
-    public function update_categories()
+    public function update_customers()
     {
         $id = $this->input->post('id', TRUE);
 
         $this->form_validation->set_rules(
             'id',
-            'Category ID',
+            'Customer ID',
             'required',
             [
                 'required'  => 'Id is required'
             ]
         );
         $this->form_validation->set_rules(
-            'category_name',
-            'Category Name',
-            'required|callback__unique_category_name[' . $id . ']',
+            'customer_code',
+            'Customer Code',
+            'required[callback__unique_customers_code[' . $id . ']',
             [
-                'required'  => 'Category name is required',
-                '_unique_category_name' => 'This category already exists'
+                'required' => 'Customer code is required',
+                '_unique_customers_code' => 'This Customer code already exist'
             ]
         );
 
@@ -141,28 +147,32 @@ class Categories extends CI_Controller
         }
 
         $data = [
-            'category_name' => $this->input->post('category_name', TRUE),
-            'description' => $this->input->post('description', TRUE),
+            'customer_code' => $this->input->post('customer_code', TRUE),
+            'customer_name' => $this->input->post('customer_name', TRUE),
+            'contact_name' => $this->input->post('contact_name', TRUE),
+            'phone' => $this->input->post('phone', TRUE),
+            'email' => $this->input->post('email', TRUE),
+            'address' => $this->input->post('address', TRUE),
             'updated_at' => date('Y-m-d H:i:s')
         ];
 
         try {
-            $operation = $this->Categories_model->update($id, $data);
-            $msg = $operation ? 'Category updated successfully!' : 'Failed to update category.';
+            $operation = $this->Customers_model->update($id, $data);
+            $msg = $operation ? 'Customer updated successfully!' : 'Failed to update Customer.';
             $this->_json_response($operation ? 'success' : 'error', $msg);
         } catch (Exception $e) {
-            log_message('error', 'Update Categories Error: ' . $e->getMessage());
+            log_message('error', 'Update Customer Error' . $e->getMessage());
             $this->_json_response('error', 'Unexpected error: ' . $e->getMessage());
         }
     }
 
-    public function delete_categories()
+    public function delete_customers()
     {
         $id = $this->input->post('id', TRUE);
 
         $this->form_validation->set_rules(
             'id',
-            'Category ID',
+            'Customer ID',
             'required',
             [
                 'required'  => 'Id is required'
@@ -175,19 +185,19 @@ class Categories extends CI_Controller
         }
 
         try {
-            $operation = $this->Categories_model->delete($id);
-            $msg = $operation ? 'Category deleted successfully!' : 'Failed to delete category.';
+            $operation = $this->Customers_model->delete($id);
+            $msg = $operation ? 'Customer deleted successfully!' : 'Failed to delete Customer.';
             $this->_json_response($operation ? 'success' : 'error', $msg);
         } catch (Exception $e) {
-            log_message('error', 'Delete Categories Error: ' . $e->getMessage());
+            log_message('error', 'Delete Customer Error: ' . $e->getMessage());
             $this->_json_response('error', 'Unexpected error: ' . $e->getMessage());
         }
     }
 
-    public function upload_categories()
+    public function upload_customers()
     {
         if (!isset($_FILES['upload_file']['name']) || empty($_FILES['upload_file']['name'])) {
-            $this->_json_response('error', 'No file uploaded.');
+            $this->_json_response('error', 'No file uploadede');
             return;
         }
 
@@ -219,62 +229,70 @@ class Categories extends CI_Controller
                     $rowData[] = trim($cell->getValue());
                 }
 
-                $this->form_validation->reset_validation();
-                $_POST['category_name'] = $rowData[0] ?? '';
-
                 $this->form_validation->set_rules(
-                    'category_name',
-                    'Category Name',
-                    'required|is_unique[categories.category_name]',
+                    'customer_code',
+                    'Customer Code',
+                    'required|is_unique[customers.customer_code]',
                     [
-                        'required'  => 'Category name is required',
-                        'is_unique' => 'This category already exists'
+                        'required'  => 'Customer code is required',
+                        'is_unique' => 'This Customer code already exists'
+                    ]
+                );
+                $this->form_validation->set_rules(
+                    'customer_name',
+                    'Customer Name',
+                    'required',
+                    [
+                        'required'  => 'Customer name is required',
                     ]
                 );
 
-                if ($this->form_validation->run() === FALSE) {
+                if ($this->form_validation->run() == FALSE) {
                     $errors[] = "Row {$rowIndex}: " . validation_errors('', '');
                 } else {
                     $data[] = [
-                        'category_name' => $rowData[0],
-                        'description' => $rowData[1] ?? null,
-                        'created_at' => date('Y-m-d H:i:s'),
+                        'customer_code' => $rowData[0],
+                        'customer_name' => $rowData[1],
+                        'contact_name' => $rowData[2] ?? null,
+                        'phone' => $rowData[3] ?? null,
+                        'email' => $rowData[4] ?? null,
+                        'address' => $rowData[4] ?? null,
+                        'created_at' => date('Y-m-d H:i:s')
                     ];
                 }
             }
-
             if (!empty($errors)) {
                 $this->_json_response('error', implode('<br>', $errors));
             } else {
-                $this->Categories_model->insert_batch($data);
+                $this->Customers_model->insert_batch($data);
                 $inserted = count($data);
-                $this->_json_response('success', "Successfully inserted {$inserted} categories.");
+                $this->_json_response('success', "Successfully inserted {$inserted} Customer.");
             }
         } catch (Exception $e) {
-            log_message('error', 'Upload Categories Error: ' . $e->getMessage());
+            log_message('error', 'Upload Customer Error: ' . $e->getMessage());
             $this->_json_response('error', 'Unexpected error: ' . $e->getMessage());
         }
     }
 
-    public function delete_multiple_categories()
+    public function delete_multiple_customers()
     {
         $ids = $this->input->post('ids');
 
         if (empty($ids)) {
-            $this->_json_response('error', 'No categories selected.');
+            $this->_json_response('error', 'No Customer selected');
             return;
         }
 
         try {
-            $deleted = $this->Categories_model->delete_multiple($ids);
+            $deleted = $this->Customers_model->delete_multiple($ids);
 
             if ($deleted > 0) {
-                $this->_json_response('success', "Deleted {$deleted} categories successfully.");
+                $this->_json_response('success', "Deleted {$deleted} Customer successfully.");
             } else {
-                $this->_json_response('error', 'No categories were deleted. IDs may not exist.');
+                $this->_json_response('error', 'No Customer were deleted. IDs may not exist.');
             }
         } catch (Exception $e) {
-            log_message('error', 'Delete Cheklist Categories Error: ' . $e->getMessage());
+            log_message('error', 'Delete Cheklist Customer Error: ' . $e->getMessage());
             $this->_json_response('error', 'Unexpected error: ' . $e->getMessage());
         }
     }

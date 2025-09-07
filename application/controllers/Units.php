@@ -10,17 +10,17 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
  * @property CI_Form_validation $form_validation
  * @property CI_Input $input
  * @property CI_DB_query_builder $db
- * @property Categories_model $Categories_model
+ * @property Units_model $Units_model
  * @property CI_Security $security
  */
 
-class Categories extends CI_Controller
+class Units extends CI_Controller
 {
     public function __construct()
     {
         parent::__construct();
         $this->load->library('form_validation');
-        $this->load->model('Categories_model');
+        $this->load->model('Units_model');
         $this->load->helper('url');
     }
 
@@ -29,29 +29,27 @@ class Categories extends CI_Controller
         echo json_encode([
             'status'    => $status,
             'message'   => $message
-            // ,'csrf_name' => $this->security->get_csrf_token_name(),
-            // 'csrf_hash' => $this->security->get_csrf_hash()
         ]);
         exit;
     }
 
-    public function get_categories()
+    public function get_units()
     {
         try {
-            $categories = $this->Categories_model->get_all();
+            $table = $this->Units_model->get_all();
             $data = [];
             $no = 1;
-            foreach ($categories as $cat) {
+            foreach ($table as $td) {
                 $row = [];
-                $row['checkbox'] = '<input type="checkbox" class="delete-checkbox" value="' . $cat->id . '">';
+                $row['checkbox'] = '<input type="checkbox" class="delete-checkbox" value="' . $td->id . '">';
                 $row['no'] = $no++;
-                $row['category_name'] = $cat->category_name;
-                $row['description'] = $cat->description;
+                $row['unit_name'] = $td->unit_name;
+                $row['description'] = $td->description;
                 $row['action'] = '
-                <button class="btn btn-sm btn-warning edit-btn" data-id="' . $cat->id . '" data-category_name="' . $cat->category_name . '" data-description="' . $cat->description . '">
+                <button class="btn btn-sm btn-warning edit-btn" data-id="' . $td->id . '" data-unit_name="' . $td->unit_name . '" data-description="' . $td->description . '">
                     <i class="bi bi-pencil-square"></i>
                 </button>
-                <button class="btn btn-sm btn-danger delete-btn" data-id="' . $cat->id . '">
+                <button class="btn btn-sm btn-danger delete-btn" data-id="' . $td->id . '">
                     <i class="bi bi-trash"></i>
                 </button>
                 ';
@@ -70,15 +68,15 @@ class Categories extends CI_Controller
         }
     }
 
-    public function save_categories()
+    public function save_units()
     {
         $this->form_validation->set_rules(
-            'category_name',
-            'Category Name',
-            'required|is_unique[categories.category_name]',
+            'unit_name',
+            'Unit Name',
+            'required|is_unique[units.unit_name]',
             [
-                'required'  => 'Category name is required',
-                'is_unique' => 'This category already exists'
+                'required'  => 'Unit name is required',
+                'is_unique' => 'This Unit already exists'
             ]
         );
 
@@ -88,50 +86,50 @@ class Categories extends CI_Controller
         }
 
         $data = [
-            'category_name' => $this->input->post('category_name', TRUE),
-            'description' => $this->input->post('description', TRUE),
-            'created_at' => date('Y-m-d H:i:s')
+            'unit_name' => $this->input->post('unit_name', TRUE),
+            'description'   => $this->input->post('description', TRUE),
+            'created_at'    => date('Y-m-d H:i:s')
         ];
 
         try {
-            $operation = $this->Categories_model->insert($data);
-            $msg = $operation ? 'Category saved successfully!' : 'Failed to save category.';
+            $operation = $this->Units_model->insert($data);
+            $msg = $operation ? 'Unit saved successfully!' : 'Failed to save Unit.';
             $this->_json_response($operation ? 'success' : 'error', $msg);
         } catch (Exception $e) {
-            log_message('error', 'Save Categories Error: ' . $e->getMessage());
+            log_message('error', 'Save Unit Error: ' . $e->getMessage());
             $this->_json_response('error', 'Unexpected error: ' . $e->getMessage());
         }
     }
 
-    public function _unique_category_name($name, $id)
+    public function _unique_unit_name($name, $id)
     {
-        $exists = $this->db->where('category_name', $name)
+        $exists = $this->db->where('unit_name', $name)
             ->where('id !=', $id)
-            ->get('categories')
+            ->get('units')
             ->row();
 
         return $exists ? FALSE : TRUE;
     }
 
-    public function update_categories()
+    public function update_units()
     {
         $id = $this->input->post('id', TRUE);
 
         $this->form_validation->set_rules(
             'id',
-            'Category ID',
+            'Unit ID',
             'required',
             [
                 'required'  => 'Id is required'
             ]
         );
         $this->form_validation->set_rules(
-            'category_name',
-            'Category Name',
-            'required|callback__unique_category_name[' . $id . ']',
+            'unit_name',
+            'Unit name',
+            'required[callback__unique_unit_name[' . $id . ']',
             [
-                'required'  => 'Category name is required',
-                '_unique_category_name' => 'This category already exists'
+                'required' => 'Unit name is required',
+                '_unique_unit_name' => 'This unit already exist'
             ]
         );
 
@@ -141,28 +139,27 @@ class Categories extends CI_Controller
         }
 
         $data = [
-            'category_name' => $this->input->post('category_name', TRUE),
+            'unit_name' => $this->input->post('unit_name', TRUE),
             'description' => $this->input->post('description', TRUE),
             'updated_at' => date('Y-m-d H:i:s')
         ];
 
         try {
-            $operation = $this->Categories_model->update($id, $data);
-            $msg = $operation ? 'Category updated successfully!' : 'Failed to update category.';
+            $operation = $this->Units_model->update($id, $data);
+            $msg = $operation ? 'Unit updated successfully!' : 'Failed to update unit.';
             $this->_json_response($operation ? 'success' : 'error', $msg);
         } catch (Exception $e) {
-            log_message('error', 'Update Categories Error: ' . $e->getMessage());
+            log_message('error', 'Update Unit Error' . $e->getMessage());
             $this->_json_response('error', 'Unexpected error: ' . $e->getMessage());
         }
     }
-
-    public function delete_categories()
+    public function delete_units()
     {
         $id = $this->input->post('id', TRUE);
 
         $this->form_validation->set_rules(
             'id',
-            'Category ID',
+            'Unit ID',
             'required',
             [
                 'required'  => 'Id is required'
@@ -175,19 +172,19 @@ class Categories extends CI_Controller
         }
 
         try {
-            $operation = $this->Categories_model->delete($id);
-            $msg = $operation ? 'Category deleted successfully!' : 'Failed to delete category.';
+            $operation = $this->Units_model->delete($id);
+            $msg = $operation ? 'Unit deleted successfully!' : 'Failed to delete unit.';
             $this->_json_response($operation ? 'success' : 'error', $msg);
         } catch (Exception $e) {
-            log_message('error', 'Delete Categories Error: ' . $e->getMessage());
+            log_message('error', 'Delete Unit Error: ' . $e->getMessage());
             $this->_json_response('error', 'Unexpected error: ' . $e->getMessage());
         }
     }
 
-    public function upload_categories()
+    public function upload_units()
     {
         if (!isset($_FILES['upload_file']['name']) || empty($_FILES['upload_file']['name'])) {
-            $this->_json_response('error', 'No file uploaded.');
+            $this->_json_response('error', 'No file uploadede');
             return;
         }
 
@@ -219,24 +216,21 @@ class Categories extends CI_Controller
                     $rowData[] = trim($cell->getValue());
                 }
 
-                $this->form_validation->reset_validation();
-                $_POST['category_name'] = $rowData[0] ?? '';
-
                 $this->form_validation->set_rules(
-                    'category_name',
-                    'Category Name',
-                    'required|is_unique[categories.category_name]',
+                    'unit_name',
+                    'Unit Name',
+                    'required|is_unique[units.unit_name]',
                     [
-                        'required'  => 'Category name is required',
-                        'is_unique' => 'This category already exists'
+                        'required'  => 'Unit name is required',
+                        'is_unique' => 'This Unit already exists'
                     ]
                 );
 
-                if ($this->form_validation->run() === FALSE) {
+                if ($this->form_validation->run() == FALSE) {
                     $errors[] = "Row {$rowIndex}: " . validation_errors('', '');
                 } else {
                     $data[] = [
-                        'category_name' => $rowData[0],
+                        'unit_name' => $rowData[0],
                         'description' => $rowData[1] ?? null,
                         'created_at' => date('Y-m-d H:i:s'),
                     ];
@@ -246,27 +240,27 @@ class Categories extends CI_Controller
             if (!empty($errors)) {
                 $this->_json_response('error', implode('<br>', $errors));
             } else {
-                $this->Categories_model->insert_batch($data);
+                $this->Units_model->insert_batch($data);
                 $inserted = count($data);
-                $this->_json_response('success', "Successfully inserted {$inserted} categories.");
+                $this->_json_response('success', "Successfully inserted {$inserted} unit.");
             }
         } catch (Exception $e) {
-            log_message('error', 'Upload Categories Error: ' . $e->getMessage());
+            log_message('error', 'Upload Unit Error: ' . $e->getMessage());
             $this->_json_response('error', 'Unexpected error: ' . $e->getMessage());
         }
     }
 
-    public function delete_multiple_categories()
+    public function delete_multiple_units()
     {
         $ids = $this->input->post('ids');
 
         if (empty($ids)) {
-            $this->_json_response('error', 'No categories selected.');
+            $this->_json_response('error', 'No unit selected');
             return;
         }
 
         try {
-            $deleted = $this->Categories_model->delete_multiple($ids);
+            $deleted = $this->Units_model->delete_multiple($ids);
 
             if ($deleted > 0) {
                 $this->_json_response('success', "Deleted {$deleted} categories successfully.");
@@ -274,7 +268,7 @@ class Categories extends CI_Controller
                 $this->_json_response('error', 'No categories were deleted. IDs may not exist.');
             }
         } catch (Exception $e) {
-            log_message('error', 'Delete Cheklist Categories Error: ' . $e->getMessage());
+            log_message('error', 'Delete Cheklist Unit Error: ' . $e->getMessage());
             $this->_json_response('error', 'Unexpected error: ' . $e->getMessage());
         }
     }
